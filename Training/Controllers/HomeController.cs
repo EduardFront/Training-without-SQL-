@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Training.Models;
+using Training.ViewModels;
 
 namespace Training.Controllers
 {
@@ -13,11 +14,14 @@ namespace Training.Controllers
     public class HomeController : Controller
     {
         List<Phone> phones;
+
+        List<Company> companies;
         public HomeController()
         {
             Company apple = new Company { Id = 1, Name = "Apple", Country = "США" };
             Company microsoft = new Company { Id = 2, Name = "Samsung", Country = "Республика Корея" };
             Company google = new Company { Id = 3, Name = "Google", Country = "США" };
+            companies = new List<Company> { apple, microsoft, google };
 
             phones = new List<Phone>
             {
@@ -29,9 +33,22 @@ namespace Training.Controllers
                 new Phone { Id=6, Maker= google, Name="Pixel XL", Price=50000 }
             };
         }
-        public IActionResult Index()
+        public IActionResult Index(int? companyId)
         {
-            return View(phones);
+            // формируем список компаний для передачи в представление
+            List<CompanyModel> compModels = companies
+                .Select(c => new CompanyModel { Id = c.Id, Name = c.Name })
+                .ToList();
+            // добавляем на первое место
+            compModels.Insert(0, new CompanyModel { Id = 0, Name = "Все" });
+
+            IndexViewModel ivm = new IndexViewModel { Companies = compModels, Phones = phones };
+
+            // если передан id компании, фильтруем список
+            if (companyId != null && companyId > 0)
+                ivm.Phones = phones.Where(p => p.Maker.Id == companyId);
+
+            return View(ivm);
         }
     }
 
